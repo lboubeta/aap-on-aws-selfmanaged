@@ -229,7 +229,7 @@ resource "aws_security_group" "bootstrap" {
   )
 }
 
-resource "aws_security_group_rule" "ssh" {
+resource "aws_security_group_rule" "inbound-ssh" {
   type              = "ingress"
   security_group_id = aws_security_group.bootstrap.id
   description       = local.description
@@ -239,6 +239,31 @@ resource "aws_security_group_rule" "ssh" {
   from_port   = 22
   to_port     = 22
 }
+
+# Access subscription manager and update packages
+resource "aws_security_group_rule" "outbound-https" {
+  type              = "egress"
+  security_group_id = aws_security_group.bootstrap.id
+  description       = local.description
+
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+  from_port   = 443
+  to_port     = 443
+}
+
+# Access RDS
+resource "aws_security_group_rule" "outbound-postgresql" {
+  type              = "egress"
+  security_group_id = aws_security_group.bootstrap.id
+  description       = local.description
+
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+  from_port   = 5432
+  to_port     = 5432
+}
+
 
 resource "aws_eip" "bootstrap" {
   count            = var.public_ipv4_pool == "" ? 0 : 1

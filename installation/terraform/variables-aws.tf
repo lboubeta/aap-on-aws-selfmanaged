@@ -104,11 +104,7 @@ Ignored if the volume type is not io1.
 EOF
 
 }
-variable "aws_bootstrap_instance_type" {
-  type = string
-  description = "Instance type for the controller node(s). Example: `m4.large`."
 
-}
 variable "aws_controller_root_volume_encrypted" {
   type = bool
 
@@ -155,4 +151,45 @@ variable "rds_engine_version" {
 variable "rds_instance_type" {
   type = string
   description = "Instance type for the RDS database node(s). Example: `m4.large`."
+}
+
+variable "rds_instance_volume_type" {
+  type        = string
+  description = "The type of volume for the root block device of postgres RDS."
+}
+
+variable "rds_instance_volume_size" {
+  type        = string
+  description = "The size of the volume in gigabytes for the root block device of postgres RDS."
+}
+
+variable "rds_instance_volume_iops" {
+  type = string
+
+  description = <<EOF
+The amount of provisioned IOPS for the root block device of postgres RDS.
+Ignored if the volume type is not io1.
+EOF
+
+}
+
+variable "rds_instance_volume_encrypted" {
+  type = bool
+
+  description = <<EOF
+Indicates whether the root EBS volume for controller is encrypted. Encrypted Amazon EBS volumes
+may only be attached to machines that support Amazon EBS encryption.
+EOF
+
+}
+
+variable "rds_username" {
+  description = "RDS Database instance username"
+  type = string
+}
+
+variable "rds_password" {
+  description = "RDS Database instance password"
+  type = string
+  sensitive = true
 }

@@ -39,14 +39,18 @@ aws_controller_root_volume_encrypted = false
 
 cloudinit = <<EOF
 #cloud-config
-ssh_pwauth: True
 ssh_authorized_keys:
   - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDSyclDB6BZBVfrFzP+6KeLAS9aK0BjdnByZ+FpeAuoizugzmz9FDeuUp1+yHFxcKya/nPIGUp4oHFPv8RSCx/kQax2yLCGZX6wMI/6MG3CriDXv0FcXmse8TWO47FQORyP5dKuM8l5ggI3kj5Vo07gFVPDJlC9zUjs2JHgUMkHcw8zmJlA+uzpxZe1eCMV44Z4F11Ek0T7lu+xflHs8X3P5Ez3eouDjb79QKr871hHm8wrXmI2mDM0Vd5JWYlK2aWLGiQlLSmsjW90N0MrosgnyJbT//ZzCRjaQZN2xvo+VKT39AkH1/mLKlKlvcJiYrQZPuAqqa3HZXA55nGm+Z8y9ws0FH61WItQ9VETl30vnvkXQ81U0Wlqs8YlyNDa6Lc9JPt4ii/OUWy0s3K77odDz7cWEUFfLFJq5MUDpOHGaocnJ//thHQxya8/P++5g3bC2GQZl5enl4E/LjApIa3w8AKhyvfcrM1tBl9ezjo7QN+SE4p75aVtaWzwB0G5odk= rgordill@musashi
-chpasswd:
-  list: |
-     ec2-user:redhat01
-  expire: False
 EOF
 
-rds_engine_version = "13.1"
-rds_instance_type = "m7i.xlarge"
+# See https://access.redhat.com/documentation/en-us/red_hat_ansible_automation_platform/2.4/html-single/red_hat_ansible_automation_platform_installation_guide/index#ref-postgresql-requirements
+rds_engine_version            = "13"
+# See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html
+rds_instance_type             = "db.m7g.xlarge"
+rds_instance_volume_type      = "gp3"
+rds_instance_volume_size      = "100"
+rds_instance_volume_iops      = "3000"
+rds_instance_volume_encrypted = false
+
+rds_username = "ansible"
+rds_password = "changeme"

@@ -54,6 +54,33 @@ module "vpc" {
   tags                 = local.tags
 }
 
+module "rds" {
+  source = "./rds"
+
+  cluster_id = var.cluster_id
+  vpc_id     = module.vpc.vpc_id
+
+  tags = local.tags
+
+  availability_zones = var.aws_controller_availability_zones
+
+  rds_engine_version = var.rds_engine_version
+  rds_instance_type  = var.rds_instance_type
+
+  cidr_blocks        = var.v4_cidrs
+  private_subnet_ids = module.vpc.public_subnet_ids
+
+  rds_skip_final_snapshot = true
+
+  rds_instance_volume_iops      = var.rds_instance_volume_iops
+  rds_instance_volume_size      = var.rds_instance_volume_size
+  rds_instance_volume_encrypted = var.rds_instance_volume_encrypted
+  rds_instance_volume_type      = var.rds_instance_volume_type
+
+  rds_username = var.rds_username
+  rds_password = var.rds_password
+}
+
 module "bootstrap" {
   source = "./bootstrap"
 
