@@ -86,7 +86,7 @@ module "bootstrap" {
 
   cluster_id    = var.cluster_id
   instance_type = var.aws_bootstrap_instance_type
-  region = var.aws_region
+  region        = var.aws_region
 
   tags = local.tags
 
@@ -94,39 +94,68 @@ module "bootstrap" {
   private_subnet_ids  = module.vpc.private_subnet_ids
   cidr_blocks         = var.v4_cidrs
 
+  cloud_user          = var.cloud_user
+  ssh_private_key     = var.ssh_private_key
   user_data_cloudinit = var.cloudinit
+
   vpc_id              = module.vpc.vpc_id
   ami_id              = var.aws_region == var.aws_ami_region ? var.aws_ami : aws_ami_copy.imported[0].id
   public_ipv4_pool    = var.aws_public_ipv4_pool
   publish_strategy    = var.aws_publish_strategy
+
+  # aap_db_username     = var.rds_username
+  # aap_db_password     = var.rds_password
+
+  controllers = module.controllers.ip_addresses
+
+  depends_on = [ module.rds.aws_instance ]
 }
 
-# module "controllers" {
-#   source = "./controllers"
+module "controllers" {
+  source = "./controllers"
 
-#   cluster_id    = var.cluster_id
-#   instance_type = var.aws_controller_instance_type
+  cluster_id    = var.cluster_id
+  instance_type = var.aws_controller_instance_type
 
-#   tags = local.tags
+  tags = local.tags
 
-#   availability_zones               = var.aws_controller_availability_zones
-#   az_to_subnet_id                  = module.vpc.az_to_public_subnet_id
-#   publish_strategy                 = var.aws_publish_strategy
-#   instance_count                   = var.controller_count
-#   controller_sg_ids                = concat([module.vpc.controller_sg_id], var.aws_controller_security_groups)
-#   root_volume_iops                 = var.aws_controller_root_volume_iops
-#   root_volume_size                 = var.aws_controller_root_volume_size
-#   root_volume_type                 = var.aws_controller_root_volume_type
-#   root_volume_encrypted            = var.aws_controller_root_volume_encrypted
-#   root_volume_kms_key_id           = var.aws_controller_root_volume_kms_key_id
-#   instance_metadata_authentication = var.aws_controller_instance_metadata_authentication
-#   # target_group_arns                = module.vpc.aws_lb_target_group_arns
-#   # target_group_arns_length         = module.vpc.aws_lb_target_group_arns_length
-#   ec2_ami                          = var.aws_region == var.aws_ami_region ? var.aws_ami : aws_ami_copy.imported[0].id
-#   user_data_cloudinit              = var.cloudinit
-#   # publish_strategy                 = var.aws_publish_strategy
-#   # iam_role_name                    = var.aws_controller_iam_role_name
-# }
+  availability_zones               = var.aws_controller_availability_zones
+  az_to_subnet_id                  = module.vpc.az_to_private_subnet_id
+  publish_strategy                 = var.aws_publish_strategy
+  instance_count                   = var.controller_count
+  controller_sg_ids                = concat([module.vpc.controller_sg_id], var.aws_controller_security_groups)
+  root_volume_iops                 = var.aws_controller_root_volume_iops
+  root_volume_size                 = var.aws_controller_root_volume_size
+  root_volume_type                 = var.aws_controller_root_volume_type
+  root_volume_encrypted            = var.aws_controller_root_volume_encrypted
+  root_volume_kms_key_id           = var.aws_controller_root_volume_kms_key_id
+  instance_metadata_authentication = var.aws_controller_instance_metadata_authentication
+  target_group_arns                = module.vpc.aws_lb_target_group_arns
+  target_group_arns_length         = module.vpc.aws_lb_target_group_arns_length
+  ec2_ami                          = var.aws_region == var.aws_ami_region ? var.aws_ami : aws_ami_copy.imported[0].id
+  user_data_cloudinit              = var.cloudinit
+  # publish_strategy                 = var.aws_publish_strategy
+  # iam_role_name                    = var.aws_controller_iam_role_name
+}
+
+module "dns" {
+  source = "./route53"
+
+  controller_external_lb_dns_name = module.vpc.aws_lb_controller_external_dns_name
+  controller_external_lb_zone_id  = module.vpc.aws_lb_controller_external_zone_id
+  controller_internal_lb_dns_name = module.vpc.aws_lb_controller_internal_dns_name
+  controller_internal_lb_zone_id  = module.vpc.aws_lb_controller_internal_zone_id
+  base_domain              = var.base_domain
+  cluster_domain           = var.cluster_domain
+  cluster_id               = var.cluster_id
+  tags                     = local.tags
+  internal_zone            = var.aws_internal_zone
+  internal_zone_role       = var.aws_internal_zone_role
+  vpc_id                   = module.vpc.vpc_id
+  region                   = var.aws_region
+  publish_strategy         = var.aws_publish_strategy
+  custom_endpoints         = var.custom_endpoints
+}
 
 resource "aws_ami_copy" "imported" {
   count             = var.aws_region != var.aws_ami_region ? 1 : 0
@@ -145,3 +174,4 @@ resource "aws_ami_copy" "imported" {
     local.tags,
   )
 }
+

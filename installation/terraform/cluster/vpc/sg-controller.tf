@@ -58,6 +58,18 @@ resource "aws_security_group_rule" "controller_ingress_https" {
   to_port     = 443
 }
 
+# To install updates
+resource "aws_security_group_rule" "controller_egress_https" {
+  type              = "egress"
+  security_group_id = aws_security_group.controller.id
+  description       = local.description
+
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]
+  from_port   = 443
+  to_port     = 443
+}
+
 # Temporal: remove when using RDS
 resource "aws_security_group_rule" "controller_ingress_posgresql" {
   type              = "ingress"

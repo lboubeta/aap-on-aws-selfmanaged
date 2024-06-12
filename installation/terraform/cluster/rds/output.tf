@@ -1,4 +1,4 @@
 output "rds_hostname" {
   description = "RDS instance hostname"
-  value = aws_db_instance.controller.address
+  value = aws_db_instance.awx.address
 }

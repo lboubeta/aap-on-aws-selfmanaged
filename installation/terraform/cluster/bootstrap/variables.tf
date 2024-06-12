@@ -73,3 +73,28 @@ variable "cidr_blocks" {
   type        = list(string)
   description = "A list of IPv4 CIDRs with 0 index being the main CIDR."
 }
+
+variable "controllers" {
+  type        = list(string)
+  description = "A list of Controllers previously created"
+}
+
+variable "cloud_user" {
+    type = string
+}
+
+variable "ssh_private_key" {
+    type = string
+}
+
+# variable "aap_db_hostname" {
+#     type = string
+# }
+
+# variable "aap_db_username" {
+#     type = string
+# }
+
+# variable "aap_db_password" {
+#     type = string
+# }

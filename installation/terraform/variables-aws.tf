@@ -11,6 +11,11 @@ EOF
   default = {}
 }
 
+variable "cloud_user" {
+  type = string
+  description = "Default Cloud User for Gold Images"
+}
+
 variable "aws_ami" {
   type = string
   description = "AMI for all nodes.  An encrypted copy of this AMI will be used.  Example: `ami-foobar123`."
@@ -193,3 +198,22 @@ variable "rds_password" {
   type = string
   sensitive = true
 }
+
+variable "ssh_private_key"{
+  description = "SSH private key for installation"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_internal_zone" {
+  type        = string
+  default     = null
+  description = "(optional) An existing hosted zone (zone ID) to use for the internal API."
+}
+
+variable "aws_internal_zone_role" {
+  type        = string
+  default     = null
+  description = "(optional) A role to assume when using an existing hosted zone from another account."
+}
+

@@ -25,21 +25,6 @@ locals {
   )
 }
 
-provider "aws" {
-  region = var.region
-
-  skip_region_validation = true
-
-  # endpoints {
-  #   ec2     = lookup(var.custom_endpoints, "ec2", null)
-  #   elb     = lookup(var.custom_endpoints, "elasticloadbalancing", null)
-  #   iam     = lookup(var.custom_endpoints, "iam", null)
-  #   route53 = lookup(var.custom_endpoints, "route53", null)
-  #   s3      = lookup(var.custom_endpoints, "s3", null)
-  #   sts     = lookup(var.custom_endpoints, "sts", null)
-  # }
-}
-
 data "aws_partition" "current" {}
 
 data "aws_ebs_default_kms_key" "current" {}
@@ -197,6 +182,68 @@ resource "aws_instance" "bootstrap" {
     local.tags,
   )
 
+  connection {
+    type = "ssh"
+    user = var.cloud_user
+    host = self.public_ip
+    private_key = var.ssh_private_key
+  }
+
+  provisioner "file" {
+    content = var.ssh_private_key
+    destination = "/home/${var.cloud_user}/.ssh/id_rsa"
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 0600 /home/${var.cloud_user}/.ssh/id_rsa",
+    ]
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/templates/config.j2", { 
+      aap_controller_hosts = var.controllers
+      # aap_ee_hosts = module.execution_vm[*].vm_private_ip
+      # aap_hub_hosts = module.hub_vm[*].vm_private_ip
+      # aap_eda_hosts = module.eda_vm[*].vm_private_ip
+      aap_ee_hosts = []
+      aap_hub_hosts = []
+      aap_eda_hosts = []
+
+      cloud_user = var.cloud_user
+    })
+
+    destination = "/home/${var.cloud_user}/.ssh/config"
+  }
+
+  provisioner "remote-exec" {
+      inline = [
+        "chmod 0644 /home/${var.cloud_user}/.ssh/config",
+      ]
+  }
+
+  # provisioner "file" {
+  #   content = templatefile("${path.module}/templates/inventory.j2", { 
+  #     aap_controller_hosts = var.controllers
+  #     # aap_ee_hosts = module.execution_vm[*].vm_private_ip
+  #     # aap_hub_hosts = module.hub_vm[*].vm_private_ip
+  #     # aap_eda_hosts = module.eda_vm[*].vm_private_ip
+  #     # aap_eda_allowed_hostnames = module.eda_vm[*].vm_public_ip
+
+  #     aap_db_host = module.rds.rds_hostname
+  #     aap_db_port = 5432
+  #     aap_db_username = var.aap_db_username
+  #     aap_db_password = var.aap_db_password
+
+  #     aap_redhat_username = var.aap_redhat_username
+  #     aap_redhat_password= var.aap_redhat_password
+
+  #     aap_admin_password = var.aap_admin_password
+  #     aap_admin_username = var.infrastructure_admin_username
+  #   })
+
+  #   destination = var.infrastructure_aap_installer_inventory_path
+  # }
+
   # depends_on = [
   #   aws_s3_object.ignition,
   #   # https://bugzilla.redhat.com/show_bug.cgi?id=1859153
@@ -235,7 +282,18 @@ resource "aws_security_group_rule" "inbound-ssh" {
   description       = local.description
 
   protocol    = "tcp"
-  cidr_blocks = local.public_endpoints ? ["0.0.0.0/0"] : var.cidr_blocks
+  cidr_blocks = ["0.0.0.0/0"]
+  from_port   = 22
+  to_port     = 22
+}
+
+resource "aws_security_group_rule" "outbound-ssh" {
+  type              = "egress"
+  security_group_id = aws_security_group.bootstrap.id
+  description       = local.description
+
+  protocol    = "tcp"
+  cidr_blocks = var.cidr_blocks
   from_port   = 22
   to_port     = 22
 }
