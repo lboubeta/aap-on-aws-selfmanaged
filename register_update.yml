@@ -1,0 +1,39 @@
+---
+- name: Update RHEL
+  hosts: all
+  tasks:
+    - name: Register hosts
+      community.general.redhat_subscription:
+        state: present
+        username: "{{ registry_username }}"
+        password: "{{ registry_password }}"
+
+    - name: Enable Repo Management through Subscription
+      ansible.builtin.command:
+        argv: 
+          - subscription-manager 
+          - config 
+          - --rhsm.manage_repos=1
+
+    - name: Install updates
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        update_only: true
+
+    - name: Enable Ansible Automation Repo
+      community.general.rhsm_repository:
+        name: ansible-automation-platform-2.4-for-rhel-9-x86_64-rpms
+
+    - name: Install python3-cryptography
+      ansible.builtin.dnf:
+        name: python3-cryptography-38.0.4-2.el9ap
+        state: present
+        allow_downgrade: true
+
+    - name: Disable upgrade this package
+      ansible.builtin.lineinfile:
+        path: /etc/dnf/dnf.conf
+        regexp: '^exclude='
+        line: exclude=python3-cryptography
+

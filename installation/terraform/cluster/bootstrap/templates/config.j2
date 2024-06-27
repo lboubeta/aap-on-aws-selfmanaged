@@ -1,0 +1,4 @@
+Host %{ for addr in aap_controller_hosts ~}${addr} %{ endfor ~} %{ for addr in aap_ee_hosts ~}${addr} %{ endfor ~} %{ for addr in aap_hub_hosts ~}${addr} %{ endfor ~} %{ for addr in aap_eda_hosts ~}${addr} %{ endfor ~}
+    User ${cloud_user}
+    IdentityFile /home/${cloud_user}/.ssh/id_rsa
+    StrictHostKeyChecking no
